@@ -19,7 +19,9 @@ if (HAS_OWN_DEPOT_TOOLS)
   find_package(DepotTools REQUIRED)
 endif (HAS_OWN_DEPOT_TOOLS)
 
+cmake_policy(SET CMP0148 OLD)
 if (NOT WIN32)
+  message("Looking for PythonInterp 2.7")
   find_package(PythonInterp 2.7 REQUIRED)
 endif (NOT WIN32)
 
@@ -31,6 +33,8 @@ if (NOT HAS_OWN_DEPOT_TOOLS)
   else (WIN32)
     set(GCLIENT_EXECUTABLE ${CMAKE_BINARY_DIR}/depot_tools/src/depot-tools/gclient)
   endif (WIN32)
+
+message("GCLIENT_EXECUTABLE: " ${GCLIENT_EXECUTABLE})
 
   ExternalProject_Add(
       depot-tools
@@ -59,22 +63,35 @@ set(_WEBRTC_CMAKE_ARGS
     -DHAS_OWN_DEPOT_TOOLS:PATH=${HAS_OWN_DEPOT_TOOLS}
     -DTARGET_CPU=${TARGET_CPU}
     -DTARGET_OS=${TARGET_OS}
-    -DWEBRTC_PARENT_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc)
+    -DWEBRTC_PARENT_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc
+    -DWEBRTC_BRANCH_HEAD=refs/branch-heads/4606)
 
 if (WEBRTC_BRANCH_HEAD)
+
+  message("\r\n\r\nWebRTC CMake Arguments: \r\n" "CMAKE_BUILD_TYPE"=${CMAKE_BUILD_TYPE}
+  "\r\nDCMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH}
+  "\r\nDDEPOT_TOOLS_PATH: " ${DEPOT_TOOLS_PATH}
+  "\r\nDGCLIENT_EXECUTABLE: " ${GCLIENT_EXECUTABLE}
+  "\r\nDHAS_OWN_DEPOT_TOOLS: " ${HAS_OWN_DEPOT_TOOLS}
+  "\r\nDTARGET_CPU: " ${TARGET_CPU}
+  "\r\nDTARGET_OS: " ${TARGET_OS}
+  "\r\nDWEBRTC_BRANCH_HEAD: " ${WEBRTC_BRANCH_HEAD}
+  "\r\nDWEBRTC_PARENT_DIR: " ${CMAKE_BINARY_DIR}"/webrtc\r\n\r\n")
+
   set(_WEBRTC_CMAKE_ARGS ${_WEBRTC_CMAKE_ARGS} -DWEBRTC_BRANCH_HEAD=${WEBRTC_BRANCH_HEAD})
 endif (WEBRTC_BRANCH_HEAD)
-
+  
 if (WEBRTC_REVISION)
   set(_WEBRTC_CMAKE_ARGS ${_WEBRTC_CMAKE_ARGS} -DWEBRTC_REVISION=${WEBRTC_REVISION})
 endif (WEBRTC_REVISION)
-
+message("WebRTC Revision: " ${WEBRTC_REVISION} "\r\n")
+  
 ExternalProject_Add(
     webrtc-src
 
     DEPENDS ${_NEXT_DEPENDS}
     GIT_REPOSITORY https://chromium.googlesource.com/external/webrtc
-
+    
     PREFIX ${CMAKE_BINARY_DIR}/webrtc
     BINARY_DIR ${CMAKE_BINARY_DIR}/webrtc/build
     DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/webrtc/src
@@ -90,45 +107,45 @@ ExternalProject_Add(
     ${_WEBRTC_CMAKE_ARGS}
 )
 
-if (MSVC OR XCODE)
-  set(_CONFIG $<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
-elseif (CMAKE_BUILD_TYPE MATCHES Debug)
-  set(_CONFIG Debug)
-else (MSVC OR XCODE)
-  set(_CONFIG Release)
-endif (MSVC OR XCODE)
+# if (MSVC OR XCODE)
+#   set(_CONFIG $<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:RelWithDebInfo>:Release>$<$<CONFIG:MinSizeRel>:Release>)
+# elseif (CMAKE_BUILD_TYPE MATCHES Debug)
+#   set(_CONFIG Debug)
+# else (MSVC OR XCODE)
+#   set(_CONFIG Release)
+# endif (MSVC OR XCODE)
 
-ExternalProject_Add(
-    libwebrtc
-    DEPENDS webrtc-src
+# ExternalProject_Add(
+#     libwebrtc
+#     DEPENDS webrtc-src
 
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/libwebrtc
-    BINARY_DIR ${CMAKE_BINARY_DIR}/libwebrtc
+#     INSTALL_DIR ${CMAKE_BINARY_DIR}
+#     SOURCE_DIR ${CMAKE_SOURCE_DIR}/libwebrtc
+#     BINARY_DIR ${CMAKE_BINARY_DIR}/libwebrtc
 
-    CMAKE_ARGS
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}
-    -DCMAKE_MODULE_PATH:PATH=${CMAKE_MODULE_PATH}
-    -DINSTALL_CMAKE_DIR:PATH=${CMAKE_BINARY_DIR}/lib/cmake/LibWebRTC
-    -DTARGET_OS:STRING=${TARGET_OS}
-    -DWEBRTC_OUTPUT_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc/src/out/${_CONFIG}
-    -DWEBRTC_SOURCE_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc/src
-)
+#     CMAKE_ARGS
+#     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+#     -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}
+#     -DCMAKE_MODULE_PATH:PATH=${CMAKE_MODULE_PATH}
+#     -DINSTALL_CMAKE_DIR:PATH=${CMAKE_BINARY_DIR}/lib/cmake/LibWebRTC
+#     -DTARGET_OS:STRING=${TARGET_OS}
+#     -DWEBRTC_OUTPUT_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc/src/out/${_CONFIG}
+#     -DWEBRTC_SOURCE_DIR:PATH=${CMAKE_BINARY_DIR}/webrtc/src
+# )
 
-if (BUILD_SAMPLE)
-  ExternalProject_Add(
-      sample
-      DEPENDS libwebrtc
-      SOURCE_DIR ${CMAKE_SOURCE_DIR}/sample
-      INSTALL_COMMAND ""
+# if (BUILD_SAMPLE)
+#   ExternalProject_Add(
+#       sample
+#       DEPENDS libwebrtc
+#       SOURCE_DIR ${CMAKE_SOURCE_DIR}/sample
+#       INSTALL_COMMAND ""
 
-      CMAKE_ARGS
-      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-  )
-endif (BUILD_SAMPLE)
+#       CMAKE_ARGS
+#       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+#   )
+# endif (BUILD_SAMPLE)
 
-include(Install)
-include(Package)
+# include(Install)
+# include(Package)
 
-export(PACKAGE LibWebRTC)
+# export(PACKAGE LibWebRTC)
