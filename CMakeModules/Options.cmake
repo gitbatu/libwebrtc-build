@@ -6,6 +6,7 @@ set(NINJA_ARGS "" CACHE STRING "Ninja arguments to pass before compiling WebRTC"
 set(GN_EXTRA_ARGS "" CACHE STRING "Extra gn gen arguments to pass before generating build files")
 set(WEBRTC_REVISION "" CACHE STRING "WebRTC commit hash to checkout")
 set(WEBRTC_BRANCH_HEAD "${LIBWEBRTC_WEBRTC_HEAD}" CACHE STRING "WebRTC branch head to checkout")
+set(WEBRTC_BRANCH_HEAD ${LIBWEBRTC_WEBRTC_HEAD})
 
 if (DEPOT_TOOLS_PATH)
   set(HAS_OWN_DEPOT_TOOLS 1)
